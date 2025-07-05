@@ -1,0 +1,8 @@
+smolagents[all]
+python-dotenv
+pandas
+numpy
+scikit-learn
+huggingface-hub
+transformers
+torch 
