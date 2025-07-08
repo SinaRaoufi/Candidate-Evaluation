@@ -22,6 +22,14 @@ from candidate_ranking_tool import (
     get_job_details,
     search_candidates_by_skill
 )
+from pdf_extraction_tools import (
+    extract_pdf_text,
+    extract_pdf_urls,
+    extract_pdf_contact_info,
+    summarize_pdf,
+    summarize_all_pdfs_in_directory,
+    search_pdfs_for_skill
+)
 
 # Load environment variables
 load_dotenv()
@@ -89,12 +97,18 @@ class CandidateRankingAgent:
         """
         print("🔧 Setting up agent with candidate ranking tools...")
 
-        # Custom tools for candidate ranking
+        # Custom tools for candidate ranking and PDF processing
         tools = [
             rank_candidates_for_job,
             list_available_jobs,
             get_job_details,
-            search_candidates_by_skill
+            search_candidates_by_skill,
+            extract_pdf_text,
+            extract_pdf_urls,
+            extract_pdf_contact_info,
+            summarize_pdf,
+            summarize_all_pdfs_in_directory,
+            search_pdfs_for_skill
         ]
 
         self.agent = CodeAgent(
@@ -104,7 +118,7 @@ class CandidateRankingAgent:
             stream_outputs=True   # Enable streaming for better user experience
         )
 
-        print("✅ Agent ready with candidate ranking capabilities!")
+        print("✅ Agent ready with candidate ranking and PDF extraction capabilities!")
 
     def run_interactive_session(self):
         """
@@ -113,20 +127,22 @@ class CandidateRankingAgent:
         print("\n" + "="*60)
         print("🤖 AI CANDIDATE RANKING AGENT")
         print("="*60)
-        print("\nWelcome! I can help you rank candidates for job descriptions.")
+        print("\nWelcome! I can help you rank candidates and extract information from PDF resumes.")
         print("\nWhat I can do:")
         print("• Rank candidates for specific job descriptions")
-        print("• List available sample jobs")
-        print("• Get detailed job information")
+        print("• Extract text, URLs, and contact info from PDF resumes")
+        print("• Summarize individual PDFs or entire directories")
+        print("• Search PDFs for specific skills or keywords")
+        print("• List available sample jobs and get job details")
         print("• Search candidates by skills")
-        print("• Answer questions about candidates and jobs")
 
         print("\nSample commands you can try:")
+        print("• 'Give me a summary of all PDFs in the resumes directory'")
+        print("• 'Extract contact information from resumes/10228751.pdf'")
+        print("• 'Find all PDFs containing Python in the resumes folder'")
+        print("• 'Summarize the resume resumes/11676151.pdf'")
         print("• 'Give me the 3 best fit candidates for job 1'")
         print("• 'Show me all available jobs'")
-        print("• 'Find candidates with Python skills'")
-        print("• 'Get details for job 2'")
-        print("• 'Who are the top 5 candidates for the Senior Data Scientist role?'")
 
         print("\nType 'quit' or 'exit' to end the session.")
         print("-" * 60)
