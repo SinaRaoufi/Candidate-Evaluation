@@ -10,12 +10,20 @@ Usage:
 
 Then interact with the agent through the terminal interface.
 """
+import warnings
+warnings.filterwarnings("ignore")
+from pydantic.warnings import PydanticDeprecatedSince20
 
+# Suppress Pydantic v2-specific deprecation warnings
+warnings.filterwarnings("ignore", category=PydanticDeprecatedSince20)
+
+# Suppress other deprecated API usage (e.g., httpx)
 import os
 import sys
 from typing import Optional
 from dotenv import load_dotenv
 from smolagents import CodeAgent, InferenceClientModel, LiteLLMModel, TransformersModel
+from fetch_emails_tool import fetch_recent_emails
 from candidate_ranking_tool import (
     rank_candidates_for_job,
     list_available_jobs,
@@ -60,6 +68,11 @@ class CandidateRankingAgent:
                     model_id="Qwen/Qwen2.5-Coder-32B-Instruct",
                     token=hf_token
                 )
+                # check if it is working
+                test_response = self.model.invoke("Hello", max_tokens=5)
+                if not test_response or "error" in str(test_response).lower():
+                    raise Exception("Hugging Face API is unavailable or quota exceeded.")
+                
                 print("✅ HuggingFace API model ready!")
                 return
         except Exception as e:
@@ -69,8 +82,39 @@ class CandidateRankingAgent:
             # Try LiteLLM with local models (ollama)
             print("🔧 Setting up LiteLLM model (trying local ollama)...")
             self.model = LiteLLMModel(
-                model_id="ollama_chat/llama3.2",
-                api_key="ollama"
+                model_id="ollama/codellama:13b-instruct",
+                system_message="""
+You are a coding assistant that always replies using structured steps.
+
+Follow this pattern:
+
+1. Thought: Explain what you're going to do.
+2. <code> block: Write the actual Python code using properly defined variables.
+3. Output: Your final output is wrapped in `final_answer(...)` and must use only variables that were defined in the code block.
+
+Example:
+
+Thought: I will define a variable with a greeting message and return it.
+
+<code>
+greeting = "Hello, world!"
+final_answer(greeting)
+</code>
+
+A nice workflow would be:
+Thought: I will fetch emails using fetch_emails_tool and then read the files in emails/ folder using pdf_extraction_tools. then i will use candidate_ranking_tool to rank the candidates.
+<code>
+your decision
+</code>
+
+Rules:
+- Never use a variable that was not defined.
+- Never return code outside <code>...</code> tags.
+- Always wrap final output inside final_answer(...).
+- Always define all variables before use.
+""",
+allow_all_imports=True,
+additional_authorized_imports=["os", "pdf_tools", "candidate_ranking_tool","glob"]
             )
             print("✅ LiteLLM model ready!")
             return
@@ -108,7 +152,8 @@ class CandidateRankingAgent:
             extract_pdf_contact_info,
             summarize_pdf,
             summarize_all_pdfs_in_directory,
-            search_pdfs_for_skill
+            search_pdfs_for_skill,
+            fetch_recent_emails
         ]
 
         self.agent = CodeAgent(
@@ -116,6 +161,7 @@ class CandidateRankingAgent:
             model=self.model,
             add_base_tools=True,  # Add default tools like web search
             stream_outputs=True   # Enable streaming for better user experience
+            
         )
 
         print("✅ Agent ready with candidate ranking and PDF extraction capabilities!")

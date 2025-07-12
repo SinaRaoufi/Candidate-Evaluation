@@ -1,4 +1,4 @@
-smolagents[all]
+smolagents
 python-dotenv
 pandas
 numpy

@@ -368,7 +368,7 @@ def summarize_all_pdfs_in_directory(directory_path: str) -> str:
 
     # Find all PDF files in the directory
     pdf_files = glob.glob(os.path.join(directory_path, "*.pdf"))
-
+    print(pdf_files)
     if not pdf_files:
         return f"No PDF files found in {directory_path}"
 
