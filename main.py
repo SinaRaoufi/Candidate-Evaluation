@@ -10,26 +10,6 @@ Usage:
 
 Then interact with the agent through the terminal interface.
 """
-import warnings
-warnings.filterwarnings("ignore")
-from pydantic.warnings import PydanticDeprecatedSince20
-
-# Suppress Pydantic v2-specific deprecation warnings
-warnings.filterwarnings("ignore", category=PydanticDeprecatedSince20)
-
-# Suppress other deprecated API usage (e.g., httpx)
-import os
-import sys
-from typing import Optional
-from dotenv import load_dotenv
-from smolagents import CodeAgent, InferenceClientModel, LiteLLMModel, TransformersModel
-from fetch_emails_tool import fetch_recent_emails
-from candidate_ranking_tool import (
-    rank_candidates_for_job,
-    list_available_jobs,
-    get_job_details,
-    search_candidates_by_skill
-)
 from pdf_extraction_tools import (
     extract_pdf_text,
     extract_pdf_urls,
@@ -38,6 +18,26 @@ from pdf_extraction_tools import (
     summarize_all_pdfs_in_directory,
     search_pdfs_for_skill
 )
+from candidate_ranking_tool import (
+    rank_candidates_for_job,
+    list_available_jobs,
+    get_job_details,
+    search_candidates_by_skill
+)
+from fetch_emails_tool import fetch_recent_emails
+from smolagents import CodeAgent, InferenceClientModel, LiteLLMModel, TransformersModel
+from dotenv import load_dotenv
+from typing import Optional
+import sys
+import os
+from pydantic.warnings import PydanticDeprecatedSince20
+import warnings
+warnings.filterwarnings("ignore")
+
+# Suppress Pydantic v2-specific deprecation warnings
+warnings.filterwarnings("ignore", category=PydanticDeprecatedSince20)
+
+# Suppress other deprecated API usage (e.g., httpx)
 
 # Load environment variables
 load_dotenv()
@@ -65,14 +65,15 @@ class CandidateRankingAgent:
             if hf_token:
                 print("🔧 Setting up HuggingFace API model...")
                 self.model = InferenceClientModel(
-                    model_id="Qwen/Qwen2.5-Coder-32B-Instruct",
+                    model_id="qwen2.5-coder:7b",
                     token=hf_token
                 )
                 # check if it is working
                 test_response = self.model.invoke("Hello", max_tokens=5)
                 if not test_response or "error" in str(test_response).lower():
-                    raise Exception("Hugging Face API is unavailable or quota exceeded.")
-                
+                    raise Exception(
+                        "Hugging Face API is unavailable or quota exceeded.")
+
                 print("✅ HuggingFace API model ready!")
                 return
         except Exception as e:
@@ -82,39 +83,49 @@ class CandidateRankingAgent:
             # Try LiteLLM with local models (ollama)
             print("🔧 Setting up LiteLLM model (trying local ollama)...")
             self.model = LiteLLMModel(
-                model_id="ollama/codellama:13b-instruct",
+                model_id="ollama/qwen2.5-coder:7b",
                 system_message="""
-You are a coding assistant that always replies using structured steps.
+You are a coding assistant that MUST always reply using this EXACT format:
 
-Follow this pattern:
-
-1. Thought: Explain what you're going to do.
-2. <code> block: Write the actual Python code using properly defined variables.
-3. Output: Your final output is wrapped in `final_answer(...)` and must use only variables that were defined in the code block.
-
-Example:
-
-Thought: I will define a variable with a greeting message and return it.
+REQUIRED FORMAT:
+Thought: [Explain what you're going to do]
 
 <code>
-greeting = "Hello, world!"
+[Your Python code here]
+final_answer([your result])
+</code>
+
+CRITICAL RULES:
+1. ALWAYS use <code> and </code> tags (NOT markdown code blocks like ```python)
+2. ALWAYS end with final_answer([result]) inside the <code> block
+3. NEVER use variables that weren't defined in the code block
+4. NEVER return code outside <code>...</code> tags
+
+EXAMPLE:
+Thought: I will create a greeting message and return it.
+
+<code>
+greeting = "Hello! How can I assist you today?"
 final_answer(greeting)
 </code>
 
-A nice workflow would be:
-Thought: I will fetch emails using fetch_emails_tool and then read the files in emails/ folder using pdf_extraction_tools. then i will use candidate_ranking_tool to rank the candidates.
-<code>
-your decision
-</code>
+TOOLS AVAILABLE:
+- fetch_recent_emails: Fetch emails from inbox
+- PDF tools: extract_pdf_text, summarize_pdf, search_pdfs_for_skill
+- Candidate ranking: rank_candidates_for_job, list_available_jobs, get_job_details
 
-Rules:
-- Never use a variable that was not defined.
-- Never return code outside <code>...</code> tags.
-- Always wrap final output inside final_answer(...).
-- Always define all variables before use.
+WORKFLOW EXAMPLE:
+Thought: I will fetch emails and then analyze PDFs in the resumes folder.
+
+<code>
+emails = fetch_recent_emails()
+pdf_summaries = summarize_all_pdfs_in_directory("resumes")
+final_answer(pdf_summaries)
+</code>
 """,
-allow_all_imports=True,
-additional_authorized_imports=["os", "pdf_tools", "candidate_ranking_tool","glob"]
+                allow_all_imports=True,
+                additional_authorized_imports=[
+                    "os", "pdf_tools", "candidate_ranking_tool", "glob"]
             )
             print("✅ LiteLLM model ready!")
             return
@@ -161,7 +172,7 @@ additional_authorized_imports=["os", "pdf_tools", "candidate_ranking_tool","glob
             model=self.model,
             add_base_tools=True,  # Add default tools like web search
             stream_outputs=True   # Enable streaming for better user experience
-            
+
         )
 
         print("✅ Agent ready with candidate ranking and PDF extraction capabilities!")
@@ -252,7 +263,7 @@ def print_setup_instructions():
 
     print("\n2. Alternative: Local Ollama")
     print("   - Install Ollama: https://ollama.com/")
-    print("   - Run: ollama pull llama3.2")
+    print("   - Run: ollama pull qwen2.5-coder:7b")
     print("   - Start ollama server: ollama serve")
 
     print("\n3. Install dependencies:")
