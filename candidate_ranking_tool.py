@@ -1,7 +1,6 @@
 from typing import List, Dict, Any, Tuple
 import json
 from smolagents import tool
-from candidate_data import CANDIDATES, SAMPLE_JOB_DESCRIPTIONS
 
 
 class CandidateRanker:
@@ -11,8 +10,19 @@ class CandidateRanker:
     """
 
     def __init__(self):
-        self.candidates = CANDIDATES
-        self.job_descriptions = SAMPLE_JOB_DESCRIPTIONS
+        self.job_descriptions = self.load_job_descriptions()
+
+    def load_job_descriptions(self) -> List[Dict[str, Any]]:
+        """Load job descriptions from JSON file."""
+        try:
+            with open('job_descriptions.json', 'r') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            print("Error: job_descriptions.json not found")
+            return []
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON in job_descriptions.json")
+            return []
 
     def calculate_skills_match(self, candidate_skills: List[str],
                                required_skills: List[str],
@@ -151,14 +161,14 @@ class CandidateRanker:
 
         return score, breakdown
 
-    def rank_candidates(self, job_description: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def rank_candidates(self, job_description: Dict[str, Any], candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
-        Rank all candidates for a given job description.
+        Rank provided candidates for a given job description.
         Returns a list of candidates with scores and explanations.
         """
         ranked_candidates = []
 
-        for candidate in self.candidates:
+        for candidate in candidates:
             # Calculate individual scores
             skills_score, skills_breakdown = self.calculate_skills_match(
                 candidate["skills"],
@@ -245,29 +255,34 @@ ranker = CandidateRanker()
 
 
 @tool
-def rank_candidates_for_job(job_description: str, top_n: int = 3) -> str:
+def rank_candidates_for_job(job_id: str, candidates_data: str, top_n: int = 3) -> str:
     """
     Ranks candidates for a specific job description and returns the top N candidates.
 
     Args:
-        job_description: The job description text or job ID (1-5 for sample jobs)
+        job_id: The job ID (1-9 for available jobs)
+        candidates_data: JSON string containing candidate data extracted from CVs
         top_n: Number of top candidates to return (default: 3)
     """
     try:
-        # Check if job_description is a number (sample job ID)
-        if job_description.isdigit():
-            job_id = int(job_description)
-            if 1 <= job_id <= len(SAMPLE_JOB_DESCRIPTIONS):
-                job_data = SAMPLE_JOB_DESCRIPTIONS[job_id - 1]
-            else:
-                return f"Invalid job ID. Please use 1-{len(SAMPLE_JOB_DESCRIPTIONS)} for sample jobs."
+        # Parse candidates data
+        try:
+            candidates = json.loads(candidates_data)
+        except json.JSONDecodeError:
+            return "Error: Invalid JSON format for candidates data."
+
+        # Get job description
+        if not job_id.isdigit():
+            return "Please provide a valid job ID (1-9 for available jobs)."
+
+        job_id_int = int(job_id)
+        if 1 <= job_id_int <= len(ranker.job_descriptions):
+            job_data = ranker.job_descriptions[job_id_int - 1]
         else:
-            # For now, we'll use the first sample job as default
-            # In a real implementation, you would parse the job description
-            job_data = SAMPLE_JOB_DESCRIPTIONS[0]
+            return f"Invalid job ID. Please use 1-{len(ranker.job_descriptions)} for available jobs."
 
         # Rank candidates
-        ranked_candidates = ranker.rank_candidates(job_data)
+        ranked_candidates = ranker.rank_candidates(job_data, candidates)
 
         # Format results
         result = f"Job: {job_data['title']} at {job_data['company']}\n"
@@ -290,12 +305,12 @@ def rank_candidates_for_job(job_description: str, top_n: int = 3) -> str:
 @tool
 def list_available_jobs() -> str:
     """
-    Lists all available sample job descriptions with their IDs.
+    Lists all available job descriptions with their IDs.
     """
-    result = "Available Sample Jobs:\n"
+    result = "Available Jobs:\n"
     result += "=" * 30 + "\n"
 
-    for i, job in enumerate(SAMPLE_JOB_DESCRIPTIONS, 1):
+    for i, job in enumerate(ranker.job_descriptions, 1):
         result += f"{i}. {job['title']} at {job['company']}\n"
         result += f"   Required Skills: {', '.join(job['required_skills'])}\n"
         result += f"   Min Experience: {job['min_experience']} years\n\n"
@@ -309,15 +324,15 @@ def get_job_details(job_id: str) -> str:
     Gets detailed information about a specific job.
 
     Args:
-        job_id: The job ID (1-5 for sample jobs)
+        job_id: The job ID (1-9 for available jobs)
     """
     try:
         if not job_id.isdigit():
-            return "Please provide a valid job ID (1-5 for sample jobs)."
+            return f"Please provide a valid job ID (1-{len(ranker.job_descriptions)} for available jobs)."
 
         job_id_int = int(job_id)
-        if 1 <= job_id_int <= len(SAMPLE_JOB_DESCRIPTIONS):
-            job = SAMPLE_JOB_DESCRIPTIONS[job_id_int - 1]
+        if 1 <= job_id_int <= len(ranker.job_descriptions):
+            job = ranker.job_descriptions[job_id_int - 1]
 
             result = f"Job Details:\n"
             result += f"Title: {job['title']}\n"
@@ -333,26 +348,33 @@ def get_job_details(job_id: str) -> str:
 
             return result
         else:
-            return f"Invalid job ID. Please use 1-{len(SAMPLE_JOB_DESCRIPTIONS)} for sample jobs."
+            return f"Invalid job ID. Please use 1-{len(ranker.job_descriptions)} for available jobs."
 
     except Exception as e:
         return f"Error getting job details: {str(e)}"
 
 
 @tool
-def search_candidates_by_skill(skill: str) -> str:
+def search_candidates_by_skill(skill: str, candidates_data: str) -> str:
     """
     Searches for candidates who have a specific skill.
 
     Args:
         skill: The skill to search for
+        candidates_data: JSON string containing candidate data extracted from CVs
     """
     try:
+        # Parse candidates data
+        try:
+            candidates = json.loads(candidates_data)
+        except json.JSONDecodeError:
+            return "Error: Invalid JSON format for candidates data."
+
         matching_candidates = []
         skill_lower = skill.lower()
 
-        for candidate in CANDIDATES:
-            if any(skill_lower in candidate_skill.lower() for candidate_skill in candidate["skills"]):
+        for candidate in candidates:
+            if any(skill_lower in candidate_skill.lower() for candidate_skill in candidate.get("skills", [])):
                 matching_candidates.append(candidate)
 
         if not matching_candidates:
@@ -362,9 +384,9 @@ def search_candidates_by_skill(skill: str) -> str:
         result += "=" * 40 + "\n"
 
         for candidate in matching_candidates:
-            result += f"• {candidate['name']} ({candidate['experience_years']} years experience)\n"
-            result += f"  Skills: {', '.join(candidate['skills'])}\n"
-            result += f"  Previous Roles: {', '.join(candidate['previous_roles'])}\n\n"
+            result += f"• {candidate.get('name', 'Unknown')} ({candidate.get('experience_years', 'N/A')} years experience)\n"
+            result += f"  Skills: {', '.join(candidate.get('skills', []))}\n"
+            result += f"  Previous Roles: {', '.join(candidate.get('previous_roles', []))}\n\n"
 
         return result
 
