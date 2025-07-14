@@ -1,0 +1,262 @@
+[
+    {
+        "id": 1,
+        "title": "Senior Data Scientist",
+        "company": "TechCorp",
+        "description": "We are looking for a Senior Data Scientist to join our AI team. The ideal candidate will have experience in machine learning, deep learning, and statistical analysis.",
+        "required_skills": [
+            "Python",
+            "Machine Learning",
+            "Statistics",
+            "TensorFlow",
+            "Data Analysis"
+        ],
+        "preferred_skills": [
+            "Deep Learning",
+            "NLP",
+            "Computer Vision",
+            "AWS",
+            "MLOps"
+        ],
+        "min_experience": 4,
+        "education_requirements": "MS in Computer Science, Statistics, or related field",
+        "responsibilities": [
+            "Develop machine learning models for business applications",
+            "Analyze large datasets to extract insights",
+            "Collaborate with engineering teams to deploy models",
+            "Present findings to stakeholders"
+        ]
+    },
+    {
+        "id": 2,
+        "title": "Frontend Developer",
+        "company": "WebTech Solutions",
+        "description": "Join our frontend team to build modern, responsive web applications. We need someone with strong React skills and eye for design.",
+        "required_skills": [
+            "JavaScript",
+            "React",
+            "HTML",
+            "CSS",
+            "Git"
+        ],
+        "preferred_skills": [
+            "TypeScript",
+            "Next.js",
+            "Tailwind CSS",
+            "Testing"
+        ],
+        "min_experience": 2,
+        "education_requirements": "BS in Computer Science or equivalent experience",
+        "responsibilities": [
+            "Develop user interfaces using React",
+            "Ensure responsive design across devices",
+            "Collaborate with designers and backend developers",
+            "Write clean, maintainable code"
+        ]
+    },
+    {
+        "id": 3,
+        "title": "Backend Software Engineer",
+        "company": "Enterprise Systems Inc",
+        "description": "We're seeking a Backend Software Engineer to work on scalable enterprise applications. Experience with Java and microservices architecture is essential.",
+        "required_skills": [
+            "Java",
+            "Spring Boot",
+            "REST APIs",
+            "Database Design",
+            "Git"
+        ],
+        "preferred_skills": [
+            "Microservices",
+            "Docker",
+            "Kubernetes",
+            "Cloud Platforms"
+        ],
+        "min_experience": 5,
+        "education_requirements": "BS in Software Engineering or Computer Science",
+        "responsibilities": [
+            "Design and develop backend services",
+            "Implement microservices architecture",
+            "Optimize application performance",
+            "Mentor junior developers"
+        ]
+    },
+    {
+        "id": 4,
+        "title": "Python Developer",
+        "company": "StartupTech",
+        "description": "Looking for a Python developer to work on web applications and APIs. Experience with Django or FastAPI is highly preferred.",
+        "required_skills": [
+            "Python",
+            "Web Development",
+            "REST APIs",
+            "Database"
+        ],
+        "preferred_skills": [
+            "Django",
+            "FastAPI",
+            "PostgreSQL",
+            "Redis",
+            "Docker"
+        ],
+        "min_experience": 3,
+        "education_requirements": "BS in Computer Science or related field",
+        "responsibilities": [
+            "Develop web applications using Python frameworks",
+            "Design and implement REST APIs",
+            "Work with databases and caching systems",
+            "Collaborate with frontend developers"
+        ]
+    },
+    {
+        "id": 5,
+        "title": "DevOps Engineer",
+        "company": "CloudFirst",
+        "description": "Join our DevOps team to manage CI/CD pipelines and infrastructure automation. Experience with containerization and orchestration is required.",
+        "required_skills": [
+            "DevOps",
+            "CI/CD",
+            "Docker",
+            "Kubernetes",
+            "Linux"
+        ],
+        "preferred_skills": [
+            "Terraform",
+            "Ansible",
+            "Jenkins",
+            "Monitoring",
+            "Cloud Platforms"
+        ],
+        "min_experience": 4,
+        "education_requirements": "BS in Computer Science, IT, or related field",
+        "responsibilities": [
+            "Design and maintain CI/CD pipelines",
+            "Manage containerized applications",
+            "Implement infrastructure as code",
+            "Monitor system performance and reliability"
+        ]
+    },
+    {
+        "id": 6,
+        "title": "AI Engineer",
+        "company": "AI Innovations",
+        "description": "We are seeking an AI Engineer to develop and deploy artificial intelligence solutions. The ideal candidate will have experience in building AI systems and working with large language models.",
+        "required_skills": [
+            "Python",
+            "Artificial Intelligence",
+            "Machine Learning",
+            "Deep Learning",
+            "Neural Networks"
+        ],
+        "preferred_skills": [
+            "PyTorch",
+            "Transformers",
+            "LLM",
+            "Reinforcement Learning",
+            "MLOps",
+            "Hugging Face"
+        ],
+        "min_experience": 3,
+        "education_requirements": "MS in Computer Science, AI, or related field",
+        "responsibilities": [
+            "Design and implement AI algorithms and models",
+            "Develop intelligent systems and applications",
+            "Optimize AI model performance and scalability",
+            "Collaborate with research teams on AI innovations",
+            "Deploy AI solutions in production environments"
+        ]
+    },
+    {
+        "id": 7,
+        "title": "Computer Vision Engineer",
+        "company": "VisionTech Solutions",
+        "description": "Join our computer vision team to develop cutting-edge image and video analysis systems. Experience with deep learning for computer vision applications is essential.",
+        "required_skills": [
+            "Computer Vision",
+            "OpenCV",
+            "Python",
+            "Deep Learning",
+            "Image Processing"
+        ],
+        "preferred_skills": [
+            "YOLO",
+            "CNN",
+            "Object Detection",
+            "Segmentation",
+            "PyTorch",
+            "TensorFlow",
+            "CUDA"
+        ],
+        "min_experience": 4,
+        "education_requirements": "MS in Computer Vision, Computer Science, or related field",
+        "responsibilities": [
+            "Develop computer vision algorithms for real-world applications",
+            "Implement object detection and recognition systems",
+            "Work with image and video datasets",
+            "Optimize models for real-time performance",
+            "Research and implement state-of-the-art CV techniques"
+        ]
+    },
+    {
+        "id": 8,
+        "title": "Machine Learning Engineer",
+        "company": "ML Systems Corp",
+        "description": "We're looking for a Machine Learning Engineer to build and deploy ML systems at scale. The role requires strong software engineering skills combined with ML expertise.",
+        "required_skills": [
+            "Machine Learning",
+            "Python",
+            "MLOps",
+            "Data Engineering",
+            "Software Engineering"
+        ],
+        "preferred_skills": [
+            "Kubernetes",
+            "Docker",
+            "Apache Airflow",
+            "Feature Engineering",
+            "Model Monitoring",
+            "AWS",
+            "Spark"
+        ],
+        "min_experience": 3,
+        "education_requirements": "BS/MS in Computer Science, Machine Learning, or related field",
+        "responsibilities": [
+            "Build and deploy machine learning pipelines",
+            "Design scalable ML infrastructure",
+            "Implement feature engineering and data preprocessing",
+            "Monitor model performance in production",
+            "Collaborate with data scientists to productionize models"
+        ]
+    },
+    {
+        "id": 9,
+        "title": "Research Assistant",
+        "company": "University Research Lab",
+        "description": "Join our research team to conduct cutting-edge research in artificial intelligence and machine learning. This position is ideal for someone looking to pursue advanced studies or gain research experience.",
+        "required_skills": [
+            "Research Methods",
+            "Python",
+            "Data Analysis",
+            "Academic Writing",
+            "Literature Review"
+        ],
+        "preferred_skills": [
+            "Machine Learning",
+            "Statistics",
+            "R",
+            "LaTeX",
+            "Jupyter Notebooks",
+            "Git",
+            "Publication Experience"
+        ],
+        "min_experience": 1,
+        "education_requirements": "BS in Computer Science, Mathematics, Statistics, or related field",
+        "responsibilities": [
+            "Conduct literature reviews and research analysis",
+            "Assist in designing and implementing experiments",
+            "Analyze research data and generate insights",
+            "Prepare research reports and publications",
+            "Present findings at research meetings and conferences"
+        ]
+    }
+]
