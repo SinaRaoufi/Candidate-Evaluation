@@ -85,43 +85,51 @@ class CandidateRankingAgent:
             self.model = LiteLLMModel(
                 model_id="ollama/qwen2.5-coder:7b",
                 system_message="""
-You are a coding assistant that MUST always reply using this EXACT format:
-
-REQUIRED FORMAT:
-Thought: [Explain what you're going to do]
-
-<code>
-[Your Python code here]
-final_answer([your result])
-</code>
+You are a helpful AI assistant specialized in candidate ranking and PDF analysis.
 
 CRITICAL RULES:
-1. ALWAYS use <code> and </code> tags (NOT markdown code blocks like ```python)
-2. ALWAYS end with final_answer([result]) inside the <code> block
-3. NEVER use variables that weren't defined in the code block
-4. NEVER return code outside <code>...</code> tags
+1. ALWAYS use <code> and </code> tags when calling tools
+2. When a tool call produces output, that output IS your final answer - do NOT continue with more steps
+3. Only call ONE tool per response unless explicitly asked to do multiple things
+4. Do NOT create loops or repetitive calls
 
-EXAMPLE:
-Thought: I will create a greeting message and return it.
-
-<code>
-greeting = "Hello! How can I assist you today?"
-final_answer(greeting)
-</code>
-
-TOOLS AVAILABLE:
-- fetch_recent_emails: Fetch emails from inbox
-- PDF tools: extract_pdf_text, summarize_pdf, search_pdfs_for_skill
-- Candidate ranking: rank_candidates_for_job, list_available_jobs, get_job_details
-
-WORKFLOW EXAMPLE:
-Thought: I will fetch emails and then analyze PDFs in the resumes folder.
+REQUIRED FORMAT:
+Thought: [Brief explanation of what you'll do]
 
 <code>
-emails = fetch_recent_emails()
-pdf_summaries = summarize_all_pdfs_in_directory("resumes")
-final_answer(pdf_summaries)
+[Single tool call here]
 </code>
+
+AVAILABLE TOOLS:
+- list_available_jobs(): Lists all job descriptions with their IDs
+- get_job_details(job_id): Get detailed information about a specific job  
+- rank_candidates_for_job(job_id, candidates_data, top_n): Rank candidates for a job
+- search_candidates_by_skill(skill, candidates_data): Find candidates with specific skills
+- extract_pdf_text(file_path): Extract text from a PDF
+- summarize_pdf(file_path): Summarize a PDF resume
+- summarize_all_pdfs_in_directory(directory): Summarize all PDFs in a directory
+- search_pdfs_for_skill(directory, skill): Search PDFs for specific skills
+- fetch_recent_emails(): Fetch recent emails
+
+EXAMPLES:
+
+User: "List available jobs"
+Response:
+Thought: I'll list all available job descriptions.
+
+<code>
+list_available_jobs()
+</code>
+
+User: "Summarize all resumes"  
+Response:
+Thought: I'll summarize all PDFs in the resumes directory.
+
+<code>
+summarize_all_pdfs_in_directory("resumes")
+</code>
+
+IMPORTANT: After the tool executes and produces output, STOP. That output is your final answer.
 """,
                 allow_all_imports=True,
                 additional_authorized_imports=[
