@@ -16,7 +16,9 @@ from pdf_extraction_tools import (
     extract_pdf_contact_info,
     summarize_pdf,
     summarize_all_pdfs_in_directory,
-    search_pdfs_for_skill
+    search_pdfs_for_skill,
+    list_resume_files,
+    get_resume_filenames
 )
 from candidate_ranking_tool import (
     rank_candidates_for_job,
@@ -109,7 +111,13 @@ AVAILABLE TOOLS:
 - summarize_pdf(file_path): Summarize a PDF resume
 - summarize_all_pdfs_in_directory(directory): Summarize all PDFs in a directory
 - search_pdfs_for_skill(directory, skill): Search PDFs for specific skills
+- list_resume_files(): List all available resume files in the resumes directory
+- get_resume_filenames(): Get just the filenames for processing
 - fetch_recent_emails(): Fetch recent emails
+
+IMPORTANT: All candidate resumes are located in the "./resumes" directory. When working with candidate data:
+- Use "resumes" or "./resumes" as the directory path for PDF operations
+- Always use the correct file paths like "resumes/CV_Yihang_Chen.pdf"
 
 EXAMPLES:
 
@@ -124,6 +132,30 @@ list_available_jobs()
 User: "Summarize all resumes"  
 Response:
 Thought: I'll summarize all PDFs in the resumes directory.
+
+<code>
+summarize_all_pdfs_in_directory("resumes")
+</code>
+
+User: "Extract contact info from Yihang Chen's resume"
+Response:
+Thought: I'll extract contact information from the specified resume.
+
+<code>
+extract_pdf_contact_info("resumes/CV_Yihang_Chen.pdf")
+</code>
+
+User: "What resume files are available?"
+Response:
+Thought: I'll list all available resume files.
+
+<code>
+list_resume_files()
+</code>
+
+User: "Give me a list of candidates"  
+Response:
+Thought: I'll get all candidate information by summarizing all resumes in the directory.
 
 <code>
 summarize_all_pdfs_in_directory("resumes")
@@ -172,6 +204,8 @@ IMPORTANT: After the tool executes and produces output, STOP. That output is you
             summarize_pdf,
             summarize_all_pdfs_in_directory,
             search_pdfs_for_skill,
+            list_resume_files,
+            get_resume_filenames,
             fetch_recent_emails
         ]
 
@@ -198,14 +232,15 @@ IMPORTANT: After the tool executes and produces output, STOP. That output is you
         print("• Extract text, URLs, and contact info from PDF resumes")
         print("• Summarize individual PDFs or entire directories")
         print("• Search PDFs for specific skills or keywords")
-        print("• List available sample jobs and get job details")
+        print("• List available resume files and job descriptions")
         print("• Search candidates by skills")
 
         print("\nSample commands you can try:")
+        print("• 'Show me all available resume files'")
         print("• 'Give me a summary of all PDFs in the resumes directory'")
-        print("• 'Extract contact information from resumes/10228751.pdf'")
+        print("• 'Extract contact information from resumes/CV_Yihang_Chen.pdf'")
         print("• 'Find all PDFs containing Python in the resumes folder'")
-        print("• 'Summarize the resume resumes/11676151.pdf'")
+        print("• 'Summarize the resume resumes/CV_Wasim_SyedTalal.pdf'")
         print("• 'Give me the 3 best fit candidates for job 1'")
         print("• 'Show me all available jobs'")
 

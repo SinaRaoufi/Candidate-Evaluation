@@ -191,6 +191,59 @@ pdf_extractor = PDFExtractor()
 
 
 @tool
+def list_resume_files() -> str:
+    """
+    List all available resume files in the resumes directory.
+
+    Returns:
+        A formatted string listing all PDF files in the resumes directory
+    """
+    resumes_dir = "./resumes"
+
+    if not os.path.exists(resumes_dir):
+        return "Error: resumes directory does not exist."
+
+    pdf_files = glob.glob(os.path.join(resumes_dir, "*.pdf"))
+
+    if not pdf_files:
+        return "No PDF files found in the resumes directory."
+
+    result = f"📁 Available Resume Files in {resumes_dir}:\n"
+    result += "=" * 40 + "\n"
+
+    for i, pdf_path in enumerate(pdf_files, 1):
+        filename = os.path.basename(pdf_path)
+        result += f"{i}. {filename}\n"
+
+    result += f"\nTotal: {len(pdf_files)} resume files\n"
+    result += "\nTo access a file, use: resumes/filename.pdf"
+
+    return result
+
+
+@tool
+def get_resume_filenames() -> str:
+    """
+    Get a simple list of resume filenames for processing.
+
+    Returns:
+        A formatted string with just the filenames, one per line
+    """
+    resumes_dir = "./resumes"
+
+    if not os.path.exists(resumes_dir):
+        return "Error: resumes directory does not exist."
+
+    pdf_files = glob.glob(os.path.join(resumes_dir, "*.pdf"))
+
+    if not pdf_files:
+        return "No PDF files found in the resumes directory."
+
+    filenames = [os.path.basename(pdf_path) for pdf_path in pdf_files]
+    return "\n".join(filenames)
+
+
+@tool
 def extract_pdf_text(pdf_path: str) -> str:
     """
     Extract all text content from a PDF file.
