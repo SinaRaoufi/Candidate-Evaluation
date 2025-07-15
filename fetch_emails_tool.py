@@ -14,6 +14,8 @@ from bs4 import BeautifulSoup  # <-- Make sure to install with: pip install beau
 from docx import Document
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
+import shutil
+from email.utils import parseaddr
 
 def convert_docx_to_pdf_text(docx_path, pdf_path):
     doc = Document(docx_path)
@@ -101,6 +103,9 @@ def fetch_recent_emails(k: int = 3) -> str:
     messages = results.get('messages', [])
 
     email_dir = Path("emails")
+        # Remove the directory if it exists
+    if email_dir.exists() and email_dir.is_dir():
+        shutil.rmtree(email_dir)
     email_dir.mkdir(exist_ok=True)
 
     for idx, msg in enumerate(messages):
@@ -111,7 +116,10 @@ def fetch_recent_emails(k: int = 3) -> str:
         # Prepare text content
         subject = mime_msg['subject'] or "(No Subject)"
         sender = mime_msg['from'] or "(Unknown Sender)"
-        email_text = f"Subject: {subject}\nFrom: {sender}\n\n"
+        name, email = parseaddr(sender)
+        senderEmail = email or "(Unknown Sender)"
+        
+        email_text = f"{senderEmail}\n"
         attachments = []
         email_body_found = False
 
