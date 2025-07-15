@@ -67,15 +67,9 @@ class CandidateRankingAgent:
             if hf_token:
                 print("🔧 Setting up HuggingFace API model...")
                 self.model = InferenceClientModel(
-                    model_id="qwen2.5-coder:7b",
+                    model_id="Qwen/Qwen2.5-Coder-32B-Instruct",
                     token=hf_token
                 )
-                # check if it is working
-                test_response = self.model.invoke("Hello", max_tokens=5)
-                if not test_response or "error" in str(test_response).lower():
-                    raise Exception(
-                        "Hugging Face API is unavailable or quota exceeded.")
-
                 print("✅ HuggingFace API model ready!")
                 return
         except Exception as e:
@@ -85,7 +79,7 @@ class CandidateRankingAgent:
             # Try LiteLLM with local models (ollama)
             print("🔧 Setting up LiteLLM model (trying local ollama)...")
             self.model = LiteLLMModel(
-                model_id="ollama/qwen2.5-coder:7b",
+                model_id="ollama/qwen2.5-coder:32b",
                 system_message="""
 You are a helpful AI assistant specialized in candidate ranking and PDF analysis.
 
@@ -306,7 +300,7 @@ def print_setup_instructions():
 
     print("\n2. Alternative: Local Ollama")
     print("   - Install Ollama: https://ollama.com/")
-    print("   - Run: ollama pull qwen2.5-coder:7b")
+    print("   - Run: ollama pull qwen2.5-coder:32b")
     print("   - Start ollama server: ollama serve")
 
     print("\n3. Install dependencies:")
