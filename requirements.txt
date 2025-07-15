@@ -5,4 +5,11 @@ numpy
 scikit-learn
 huggingface-hub
 transformers
-torch 
+torch
+PyMuPDF
+beautifulsoup4
+python-docx
+reportlab
+google-auth
+google-auth-oauthlib
+google-api-python-client 
