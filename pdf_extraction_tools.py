@@ -19,8 +19,9 @@ class PDFExtractor:
         self.email_pattern = re.compile(
             r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
         )
+        # Improved phone pattern to handle various formats and spaces
         self.phone_pattern = re.compile(
-            r'(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}'
+            r'(\+?\d{1,3}[-.\s]*\d{2,4}[-.\s]*\d{2,4}[-.\s]*\d{2,4})'
         )
 
     def extract_text_from_pdf(self, pdf_path: str) -> str:
@@ -78,29 +79,75 @@ class PDFExtractor:
             text = self.extract_text_from_pdf(pdf_path)
 
             # Extract emails
-            emails = self.email_pattern.findall(text)
+            all_emails = self.email_pattern.findall(text)
 
-            # Extract phone numbers
+            # Filter emails to prioritize personal emails and exclude university/supervisor emails
+            personal_emails = []
+            university_keywords = ['uni-', 'university',
+                                   'edu', 'ac.', 'informatik', 'cs.']
+
+            for email in all_emails:
+                email_lower = email.lower()
+                # Check if this is likely a personal email (not university/supervisor)
+                is_university = any(
+                    keyword in email_lower for keyword in university_keywords)
+                if not is_university:
+                    personal_emails.append(email)
+
+            # If we found personal emails, use those. Otherwise, fall back to the first email found
+            emails_to_use = personal_emails if personal_emails else all_emails[:1]
+
+            # Extract phone numbers with improved pattern
             phones = self.phone_pattern.findall(text)
+            # Clean up phone numbers by removing extra spaces
+            cleaned_phones = []
+            personal_phones = []
+            office_phones = []
+
+            for phone in phones:
+                cleaned_phone = re.sub(
+                    r'\s+', ' ', phone.strip())  # Normalize spaces
+                # Ensure it's a complete number
+                if len(cleaned_phone.replace(' ', '').replace('-', '').replace('.', '')) >= 10:
+                    cleaned_phones.append(cleaned_phone)
+                    # Prioritize mobile numbers (usually start with specific patterns)
+                    # German mobile numbers typically start with +49 1xx or contain patterns like 176, 177, etc.
+                    if any(pattern in cleaned_phone for pattern in ['176', '177', '178', '179', '151', '152', '157', '159']):
+                        personal_phones.append(cleaned_phone)
+                    else:
+                        office_phones.append(cleaned_phone)
+
+            # Prioritize personal phones, fall back to office phones if needed
+            phones_to_use = personal_phones if personal_phones else office_phones
 
             # Extract URLs
             urls = self.url_pattern.findall(text)
 
-            # Try to extract name (assuming it's in the first few lines)
+            # Improved name extraction - look for name in the first few lines
             lines = text.split('\n')
             potential_name = ""
             for line in lines[:5]:
                 line = line.strip()
-                if line and len(line.split()) <= 4 and len(line) > 2:
-                    # Simple heuristic for name detection
-                    if not any(char.isdigit() for char in line) and '@' not in line:
-                        potential_name = line
-                        break
+                if line and len(line.split()) >= 2:  # At least 2 words
+                    # Look for lines that could be names
+                    words = line.split()
+                    if (not any(char.isdigit() for char in line) and
+                        '@' not in line and
+                        'http' not in line.lower() and
+                        not line.lower().endswith(('germany', 'university')) and
+                            all(len(word) > 1 for word in words)):  # Each word should be more than 1 character
+                        # Remove common titles/suffixes
+                        filtered_words = [word for word in words if word.lower() not in [
+                            'master', 'of', 'sciences', 'bachelor', 'phd', 'dr.', 'prof.', 'msc', 'bsc', 'msc.', 'bsc.']]
+                        # Should have at least first and last name after filtering
+                        if len(filtered_words) >= 2:
+                            potential_name = ' '.join(filtered_words)
+                            break
 
             return {
                 "name": potential_name,
-                "emails": list(set(emails)),
-                "phones": list(set(phones)),
+                "emails": list(set(emails_to_use)),
+                "phones": list(set(phones_to_use)),
                 "urls": list(set(urls)),
                 "file_path": pdf_path
             }
