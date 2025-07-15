@@ -13,7 +13,13 @@ class PDFExtractor:
     """
 
     def __init__(self):
+        # Enhanced URL pattern to capture both protocol and non-protocol URLs
         self.url_pattern = re.compile(
+            r'(?:https?://)?(?:www\.)?[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:/[^\s]*)?',
+            re.IGNORECASE
+        )
+        # Keep the original strict pattern for fallback
+        self.strict_url_pattern = re.compile(
             r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
         )
         self.email_pattern = re.compile(
@@ -230,6 +236,130 @@ class PDFExtractor:
                 "filename": os.path.basename(pdf_path),
                 "file_path": pdf_path,
                 "error": f"Error summarizing {pdf_path}: {str(e)}"
+            }
+
+    def extract_platform_urls(self, pdf_path: str) -> Dict[str, List[str]]:
+        """
+        Extract URLs specifically for Google Scholar, GitHub, and LinkedIn from a PDF file.
+
+        Args:
+            pdf_path: Path to the PDF file
+
+        Returns:
+            Dictionary with platform names as keys and lists of URLs as values
+        """
+        try:
+            text = self.extract_text_from_pdf(pdf_path)
+
+            # Use enhanced pattern to find all URLs (with and without protocols)
+            all_urls = self.url_pattern.findall(text)
+
+            # Also check for strict URLs with protocols
+            strict_urls = self.strict_url_pattern.findall(text)
+
+            # Combine and deduplicate
+            combined_urls = list(set(all_urls + strict_urls))
+
+            # Define platform patterns with more comprehensive matching
+            platform_patterns = {
+                'google_scholar': [
+                    r'scholar\.google\.',
+                    r'scholar\.googleusercontent\.',
+                    r'google.*scholar',
+                    r'scholar.*google',
+                ],
+                'github': [
+                    r'github\.com',
+                    r'github\.io',
+                    r'.*\.github\.io',
+                    r'github',  # Also catch just "github" mentions with context
+                ],
+                'linkedin': [
+                    r'linkedin\.com',
+                    r'www\.linkedin\.com',
+                    r'linkedin',
+                ]
+            }
+
+            platform_urls = {
+                'google_scholar': [],
+                'github': [],
+                'linkedin': []
+            }
+
+            # Look for URLs in the raw text as well for cases like "github.com/username"
+            text_lower = text.lower()
+
+            # Manual search for common patterns that might be missed
+            import re
+
+            # Google Scholar patterns - more precise matching
+            scholar_matches = re.findall(
+                r'scholar\.google\.com[^\s]*', text, re.IGNORECASE)
+            for match in scholar_matches:
+                platform_urls['google_scholar'].append(match)
+
+            # GitHub patterns - look for github.com and *.github.io, more precise
+            github_matches = re.findall(
+                r'(?:github\.com/[^\s]+|[a-zA-Z0-9-]+\.github\.io(?:[^\s]*)?)', text, re.IGNORECASE)
+            for match in github_matches:
+                platform_urls['github'].append(match)
+
+            # LinkedIn patterns - more precise
+            linkedin_matches = re.findall(
+                r'linkedin\.com[^\s]*', text, re.IGNORECASE)
+            for match in linkedin_matches:
+                platform_urls['linkedin'].append(match)
+
+            # Also categorize URLs from our general URL finding
+            for url in combined_urls:
+                url_lower = url.lower()
+
+                # Check Google Scholar - must contain scholar and google
+                if 'scholar' in url_lower and 'google' in url_lower:
+                    platform_urls['google_scholar'].append(url)
+
+                # Check GitHub - must be github.com or *.github.io
+                elif ('github.com' in url_lower) or (url_lower.endswith('.github.io')):
+                    platform_urls['github'].append(url)
+
+                # Check LinkedIn
+                elif 'linkedin.com' in url_lower:
+                    platform_urls['linkedin'].append(url)
+
+            # Remove duplicates from each platform and clean up URLs
+            for platform in platform_urls:
+                # Clean and deduplicate
+                cleaned_urls = []
+                for url in platform_urls[platform]:
+                    # Add protocol if missing for proper URLs
+                    if not url.startswith(('http://', 'https://')):
+                        url = 'https://' + url
+
+                    # Filter out incomplete URLs
+                    if platform == 'google_scholar':
+                        # Must have scholar.google.com
+                        if 'scholar.google.com' in url.lower():
+                            cleaned_urls.append(url)
+                    elif platform == 'github':
+                        # Must have github.com/ or .github.io
+                        if ('github.com/' in url.lower()) or ('.github.io' in url.lower()):
+                            cleaned_urls.append(url)
+                    elif platform == 'linkedin':
+                        # Must have linkedin.com
+                        if 'linkedin.com' in url.lower():
+                            cleaned_urls.append(url)
+
+                platform_urls[platform] = list(set(cleaned_urls))
+
+            return platform_urls
+
+        except Exception as e:
+            return {
+                'error': f"Error extracting platform URLs from {pdf_path}: {str(e)}",
+                'google_scholar': [],
+                'github': [],
+                'linkedin': []
             }
 
 
@@ -569,5 +699,147 @@ def search_pdfs_for_skill(directory_path: str, skill: str) -> str:
 
     for i, match in enumerate(matches, 1):
         result += f"{i}. {match['file']} ({match['count']} occurrences)\n"
+
+    return result
+
+
+@tool
+def extract_platform_urls_from_pdf(pdf_path: str) -> str:
+    """
+    Extract URLs specifically for Google Scholar, GitHub, and LinkedIn from a PDF file.
+
+    Args:
+        pdf_path: Path to the PDF file (relative or absolute)
+
+    Returns:
+        A formatted string listing platform-specific URLs found in the PDF
+    """
+    if not os.path.isabs(pdf_path):
+        if not pdf_path.startswith('./'):
+            pdf_path = './' + pdf_path
+
+    if not os.path.exists(pdf_path):
+        return f"Error: File {pdf_path} does not exist."
+
+    platform_urls = pdf_extractor.extract_platform_urls(pdf_path)
+
+    if "error" in platform_urls:
+        return platform_urls["error"]
+
+    result = f"Platform URLs found in {os.path.basename(pdf_path)}:\n"
+    result += "=" * 50 + "\n"
+
+    total_urls = 0
+
+    # Google Scholar URLs
+    if platform_urls['google_scholar']:
+        result += f"\n🎓 Google Scholar ({len(platform_urls['google_scholar'])} found):\n"
+        for i, url in enumerate(platform_urls['google_scholar'], 1):
+            result += f"  {i}. {url}\n"
+        total_urls += len(platform_urls['google_scholar'])
+    else:
+        result += "\n🎓 Google Scholar: No URLs found\n"
+
+    # GitHub URLs
+    if platform_urls['github']:
+        result += f"\n💻 GitHub ({len(platform_urls['github'])} found):\n"
+        for i, url in enumerate(platform_urls['github'], 1):
+            result += f"  {i}. {url}\n"
+        total_urls += len(platform_urls['github'])
+    else:
+        result += "\n💻 GitHub: No URLs found\n"
+
+    # LinkedIn URLs
+    if platform_urls['linkedin']:
+        result += f"\n💼 LinkedIn ({len(platform_urls['linkedin'])} found):\n"
+        for i, url in enumerate(platform_urls['linkedin'], 1):
+            result += f"  {i}. {url}\n"
+        total_urls += len(platform_urls['linkedin'])
+    else:
+        result += "\n💼 LinkedIn: No URLs found\n"
+
+    result += f"\nTotal platform URLs found: {total_urls}"
+
+    return result
+
+
+@tool
+def extract_platform_urls_from_all_pdfs(directory_path: str) -> str:
+    """
+    Extract platform URLs (Google Scholar, GitHub, LinkedIn) from all PDF files in a directory.
+
+    Args:
+        directory_path: Path to the directory containing PDF files
+
+    Returns:
+        A formatted string with platform URLs from all PDFs in the directory
+    """
+    if not os.path.isabs(directory_path):
+        if not directory_path.startswith('./'):
+            directory_path = './' + directory_path
+
+    if not os.path.exists(directory_path):
+        return f"Error: Directory {directory_path} does not exist."
+
+    if not os.path.isdir(directory_path):
+        return f"Error: {directory_path} is not a directory."
+
+    # Find all PDF files in the directory
+    pdf_files = glob.glob(os.path.join(directory_path, "*.pdf"))
+
+    if not pdf_files:
+        return f"No PDF files found in {directory_path}"
+
+    result = f"🔗 PLATFORM URLs FROM ALL PDFs IN: {directory_path}\n"
+    result += "=" * 60 + "\n"
+    result += f"Analyzing {len(pdf_files)} PDF files...\n\n"
+
+    total_google_scholar = 0
+    total_github = 0
+    total_linkedin = 0
+
+    for i, pdf_path in enumerate(pdf_files, 1):
+        filename = os.path.basename(pdf_path)
+        result += f"📄 {i}. {filename}\n"
+        result += "-" * 40 + "\n"
+
+        platform_urls = pdf_extractor.extract_platform_urls(pdf_path)
+
+        if "error" in platform_urls:
+            result += f"❌ Error: {platform_urls['error']}\n\n"
+            continue
+
+        file_has_urls = False
+
+        # Google Scholar URLs
+        if platform_urls['google_scholar']:
+            result += f"🎓 Google Scholar: {', '.join(platform_urls['google_scholar'])}\n"
+            total_google_scholar += len(platform_urls['google_scholar'])
+            file_has_urls = True
+
+        # GitHub URLs
+        if platform_urls['github']:
+            result += f"💻 GitHub: {', '.join(platform_urls['github'])}\n"
+            total_github += len(platform_urls['github'])
+            file_has_urls = True
+
+        # LinkedIn URLs
+        if platform_urls['linkedin']:
+            result += f"💼 LinkedIn: {', '.join(platform_urls['linkedin'])}\n"
+            total_linkedin += len(platform_urls['linkedin'])
+            file_has_urls = True
+
+        if not file_has_urls:
+            result += "No platform URLs found\n"
+
+        result += "\n"
+
+    # Summary
+    result += "📊 SUMMARY:\n"
+    result += "=" * 30 + "\n"
+    result += f"🎓 Google Scholar URLs: {total_google_scholar}\n"
+    result += f"💻 GitHub URLs: {total_github}\n"
+    result += f"💼 LinkedIn URLs: {total_linkedin}\n"
+    result += f"📄 Total files analyzed: {len(pdf_files)}\n"
 
     return result

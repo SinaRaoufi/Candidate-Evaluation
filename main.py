@@ -18,7 +18,9 @@ from pdf_extraction_tools import (
     summarize_all_pdfs_in_directory,
     search_pdfs_for_skill,
     list_resume_files,
-    get_resume_filenames
+    get_resume_filenames,
+    extract_platform_urls_from_pdf,
+    extract_platform_urls_from_all_pdfs
 )
 from candidate_ranking_tool import (
     rank_candidates_for_job,
@@ -108,6 +110,8 @@ AVAILABLE TOOLS:
 - list_resume_files(): List all available resume files in the resumes directory
 - get_resume_filenames(): Get just the filenames for processing
 - fetch_recent_emails(): Fetch recent emails
+- extract_platform_urls_from_pdf(file_path): Extract Google Scholar, GitHub, and LinkedIn URLs from a PDF
+- extract_platform_urls_from_all_pdfs(directory): Extract platform URLs from all PDFs in a directory
 
 IMPORTANT: All candidate resumes are located in the "./resumes" directory. When working with candidate data:
 - Use "resumes" or "./resumes" as the directory path for PDF operations
@@ -155,6 +159,22 @@ Thought: I'll get all candidate information by summarizing all resumes in the di
 summarize_all_pdfs_in_directory("resumes")
 </code>
 
+User: "Extract Google Scholar, GitHub and LinkedIn URLs from all resumes"
+Response:
+Thought: I'll extract platform-specific URLs from all PDFs in the resumes directory.
+
+<code>
+extract_platform_urls_from_all_pdfs("resumes")
+</code>
+
+User: "Find LinkedIn profile for Yihang Chen"
+Response:
+Thought: I'll extract platform URLs from Yihang Chen's resume to find LinkedIn profile.
+
+<code>
+extract_platform_urls_from_pdf("resumes/CV_Yihang_Chen.pdf")
+</code>
+
 IMPORTANT: After the tool executes and produces output, STOP. That output is your final answer.
 """,
                 allow_all_imports=True,
@@ -200,7 +220,9 @@ IMPORTANT: After the tool executes and produces output, STOP. That output is you
             search_pdfs_for_skill,
             list_resume_files,
             get_resume_filenames,
-            fetch_recent_emails
+            fetch_recent_emails,
+            extract_platform_urls_from_pdf,
+            extract_platform_urls_from_all_pdfs
         ]
 
         self.agent = CodeAgent(
