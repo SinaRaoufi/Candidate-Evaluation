@@ -129,26 +129,59 @@ class PDFExtractor:
             # Extract URLs
             urls = self.url_pattern.findall(text)
 
-            # Improved name extraction - look for name in the first few lines
+            # Improved name extraction - look for name in multiple places
             lines = text.split('\n')
             potential_name = ""
-            for line in lines[:5]:
-                line = line.strip()
-                if line and len(line.split()) >= 2:  # At least 2 words
-                    # Look for lines that could be names
-                    words = line.split()
-                    if (not any(char.isdigit() for char in line) and
-                        '@' not in line and
-                        'http' not in line.lower() and
-                        not line.lower().endswith(('germany', 'university')) and
-                            all(len(word) > 1 for word in words)):  # Each word should be more than 1 character
-                        # Remove common titles/suffixes
-                        filtered_words = [word for word in words if word.lower() not in [
-                            'master', 'of', 'sciences', 'bachelor', 'phd', 'dr.', 'prof.', 'msc', 'bsc', 'msc.', 'bsc.']]
-                        # Should have at least first and last name after filtering
-                        if len(filtered_words) >= 2:
-                            potential_name = ' '.join(filtered_words)
-                            break
+
+            # First, look for signature patterns (common in emails)
+            signature_patterns = [
+                r'best regards,?\s*(.+)',
+                r'sincerely,?\s*(.+)',
+                r'regards,?\s*(.+)',
+                r'yours,?\s*(.+)',
+                r'thank you,?\s*(.+)',
+                r'cheers,?\s*(.+)'
+            ]
+
+            text_lower = text.lower()
+            for pattern in signature_patterns:
+                matches = re.findall(pattern, text_lower,
+                                     re.IGNORECASE | re.MULTILINE)
+                if matches:
+                    for match in matches:
+                        match = match.strip()
+                        # Clean up the name
+                        words = match.split()
+                        if len(words) >= 2 and len(words) <= 4:  # Reasonable name length
+                            # Filter out common non-name words
+                            filtered_words = [word for word in words if word.lower() not in [
+                                'sincerely', 'regards', 'best', 'yours', 'truly', 'faithfully']]
+                            if len(filtered_words) >= 2:
+                                potential_name = ' '.join(
+                                    filtered_words).upper()
+                                break
+                if potential_name:
+                    break
+
+            # If no signature name found, look in the first few lines (original logic)
+            if not potential_name:
+                for line in lines[:5]:
+                    line = line.strip()
+                    if line and len(line.split()) >= 2:  # At least 2 words
+                        # Look for lines that could be names
+                        words = line.split()
+                        if (not any(char.isdigit() for char in line) and
+                            '@' not in line and
+                            'http' not in line.lower() and
+                            not line.lower().endswith(('germany', 'university')) and
+                                all(len(word) > 1 for word in words)):  # Each word should be more than 1 character
+                            # Remove common titles/suffixes
+                            filtered_words = [word for word in words if word.lower() not in [
+                                'master', 'of', 'sciences', 'bachelor', 'phd', 'dr.', 'prof.', 'msc', 'bsc', 'msc.', 'bsc.']]
+                            # Should have at least first and last name after filtering
+                            if len(filtered_words) >= 2:
+                                potential_name = ' '.join(filtered_words)
+                                break
 
             return {
                 "name": potential_name,
