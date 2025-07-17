@@ -1,5 +1,10 @@
 # AI Agent for optimizing candidate evaluation
 
+**Course Project for Dialogue Systems (DIALOGUE SYSTEMS) - University of Bonn**
+
+This project was developed as part of the Dialogue Systems course at the University of Bonn, taught by **[Prof. Dr. Lucie Flek](https://scholar.google.de/citations?user=qZCZFp0AAAAJ&hl=en)** and **[Dr. Akbar Karimi](https://scholar.google.com/citations?user=_qroDmEAAAAJ&hl=en)**. For more information about the course, visit: [Dialogue Systems Course](https://www.b-it-center.de/caisa/teaching/dialogsys)
+
+---
 
 An intelligent AI agent built with [smolagents](https://github.com/huggingface/smolagents) that processes PDF resumes, extracts detailed candidate information, and ranks candidates for job positions using advanced AI analysis.
 
