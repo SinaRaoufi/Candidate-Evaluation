@@ -28,6 +28,7 @@ from candidate_ranking_tool import (
     get_job_details,
     search_candidates_by_skill
 )
+from reply_emails_tool import reply_email
 from fetch_emails_tool import fetch_recent_emails
 from smolagents import CodeAgent, InferenceClientModel, LiteLLMModel, TransformersModel
 from dotenv import load_dotenv
@@ -112,6 +113,7 @@ AVAILABLE TOOLS:
 - fetch_recent_emails(): Fetch recent emails
 - extract_platform_urls_from_pdf(file_path): Extract Google Scholar, GitHub, and LinkedIn URLs from a PDF
 - extract_platform_urls_from_all_pdfs(directory): Extract platform URLs from all PDFs in a directory
+- send_email(subject, body, receiver): Send a clarification email to an applicant requesting more information and asking them to re-submit their updated application.
 
 IMPORTANT: All candidate resumes are located in the "./resumes" directory. When working with candidate data:
 - Use "resumes" or "./resumes" as the directory path for PDF operations
@@ -222,7 +224,8 @@ IMPORTANT: After the tool executes and produces output, STOP. That output is you
             get_resume_filenames,
             fetch_recent_emails,
             extract_platform_urls_from_pdf,
-            extract_platform_urls_from_all_pdfs
+            extract_platform_urls_from_all_pdfs,
+            reply_email
         ]
 
         self.agent = CodeAgent(

@@ -8,6 +8,8 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
+from smolagents import tool
+
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
 def get_gmail_service():
@@ -46,3 +48,28 @@ def send_email(subject: str, body: str, reciever: str):
         print(f"Message sent! ID: {sent_message['id']}")
     except Exception as error:
         print(f"An error occurred: {error}")
+
+        
+@tool
+def reply_email(subject: str, body: str, receiver: str) -> str:
+    """
+    Sends a follow-up email to an applicant requesting clarification or additional information.
+
+    This tool is used to contact applicants whose qualifications require further assessment.
+    The email should contain specific questions or points that need clarification, such as missing
+    documents, inconsistencies in the application, or unclear academic/work history. Applicants are
+    expected to respond with the requested information and re-submit their updated application materials.
+
+    Args:
+        subject (str): The subject of the email.
+        body (str): The body of the email, including specific questions or clarification requests.
+        receiver (str): The recipient's email address (the applicant).
+
+    Returns:
+        str: Result message indicating success or failure.
+    """
+    try:
+        send_email(subject, body, receiver)
+        return "Email sent successfully."
+    except Exception as e:
+        return f"Failed to send email: {str(e)}"
